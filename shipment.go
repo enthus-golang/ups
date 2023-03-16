@@ -43,7 +43,8 @@ func (c *Client) CreateShipment(ctx context.Context, shipmentRequest ShipmentReq
 	}
 
 	var response struct {
-		ShipmentResponse ShipmentResponse
+		ShipmentResponse *ShipmentResponse
+		ErrorResponse    *ErrorResponse `json:"response"`
 	}
 
 	err = json.NewDecoder(res.Body).Decode(&response)
@@ -51,5 +52,9 @@ func (c *Client) CreateShipment(ctx context.Context, shipmentRequest ShipmentReq
 		return nil, err
 	}
 
-	return &response.ShipmentResponse, nil
+	if response.ErrorResponse != nil {
+		return nil, response.ErrorResponse
+	}
+
+	return response.ShipmentResponse, nil
 }
