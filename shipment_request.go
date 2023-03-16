@@ -182,7 +182,7 @@ type Shipment struct {
 	// For Return Shipments up to and including 20 packages are allowed.
 	// US/PR origin return movements are limited to only one package. For
 	// Mail Innovations shipments only one package is allowed.
-	Packages []Package
+	Packages []Package `json:"Package" validate:"required,dive"`
 	// For SubVersion 2205, user can send up to 7 days in the future with
 	// current date as day zero. Format: YYYYMMDD
 	ShipmentDate string `json:",omitempty"`
@@ -580,7 +580,7 @@ type EMail struct {
 	// Email address where the notification is sent.
 	// Up to five email addresses are allowed for each type of Quantum View
 	// TM shipment notification. Up to two email address for return notification
-	EMailAddress string `validate:"min=1,max=50"`
+	EMailAddresses []string `json:"EMailAddress" validate:"required,min=1,max=5,dive,min=1,max=50"`
 	// The address where an undeliverable eMail message is sent if the eMail
 	// with the notification is undeliverable.
 	// There can be only one UndeliverableEMailAddress for each type of
