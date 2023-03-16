@@ -122,3 +122,29 @@ type ImageFormat struct {
 	// Applicable only for ShipmentResponse and ShipAcceptResponse.
 	Description string
 }
+
+type VoidShipmentResponse struct {
+	// Response Container.
+	Response Response
+	// Container for the Summary Result.
+	SummaryResult SummaryResult
+}
+
+type SummaryResult struct {
+	// Container for the status of the Summary Result
+	Status Status
+}
+
+type Status struct {
+	// Code for the status of the Summary Result
+	Code string
+	// Description of the status of the Summary Result
+	Description string
+}
+
+type PackageLevelResult struct {
+	// Container for the status of the Summary Result
+	Status Status
+	// The package's identification number
+	TrackingNumber string
+}

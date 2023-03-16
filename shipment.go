@@ -58,3 +58,47 @@ func (c *Client) CreateShipment(ctx context.Context, shipmentRequest ShipmentReq
 
 	return response.ShipmentResponse, nil
 }
+
+func (c *Client) VoidShipment(ctx context.Context, shipmentIdentificationNumber string) (*VoidShipmentResponse, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, string(c.environment)+"/cancel/"+shipmentIdentificationNumber, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	c.addAuthorization(req)
+
+	err = c.logHTTPRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	err = c.logHTTPResponse(res)
+	if err != nil {
+		return nil, err
+	}
+
+	var response struct {
+		VoidShipmentResponse *VoidShipmentResponse
+		ErrorResponse        *ErrorResponse `json:"response"`
+	}
+
+	err = json.NewDecoder(res.Body).Decode(&response)
+	if err != nil {
+		return nil, err
+	}
+
+	if response.ErrorResponse != nil {
+		return nil, response.ErrorResponse
+	}
+
+	return response.VoidShipmentResponse, nil
+
+}
