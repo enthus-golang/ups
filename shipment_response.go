@@ -21,6 +21,38 @@ type Response struct {
 	// TransactionReference *TransactionReference // buggy
 }
 
+func (s *Response) UnmarshalJSON(data []byte) error {
+	var v map[string]json.RawMessage
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+
+	if status, ok := v["ResponseStatus"]; ok {
+		err := json.Unmarshal(status, &s.ResponseStatus)
+		if err != nil {
+			return err
+		}
+	}
+
+	if alert, ok := v["Alert"]; ok {
+		if alert[0] == '{' {
+			s.Alerts = make([]Alert, 1)
+
+			err := json.Unmarshal(alert, &s.Alerts[0])
+			if err != nil {
+				return err
+			}
+		} else {
+			err := json.Unmarshal(alert, &s.Alerts)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 type ResponseStatus struct {
 	// Identifies the success or failure of the transaction. 1 = Successful
 	Code string
