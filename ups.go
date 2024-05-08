@@ -10,8 +10,8 @@ import (
 type Environment string
 
 const (
-	Testing    Environment = "https://wwwcie.ups.com/ship/v1807/shipments"
-	Production Environment = "https://onlinetools.ups.com/ship/v1807/shipments"
+	Testing    Environment = "https://wwwcie.ups.com/ship/v2403/shipments"
+	Production Environment = "https://onlinetools.ups.com/ship/v2403/shipments"
 )
 
 type Client struct {
@@ -22,10 +22,9 @@ type Client struct {
 	accessLicenseNumber string
 
 	// authorization
-	username            string
-	password            string
-	authenticationToken string
-	authorization       string
+	username    string
+	password    string
+	accessToken string
 
 	logWriter io.Writer
 }
@@ -59,11 +58,10 @@ func WithUsernameAndPassword(username, password string) OptionFunction {
 	}
 }
 
-// WithAuthenticationToken uses a token for authentication.
-func WithAuthenticationToken(authenticationToken, authorization string) OptionFunction {
+// WithAccessToken uses an access token for authentication.
+func WithAccessToken(accessToken string) OptionFunction {
 	return func(c *Client) {
-		c.authenticationToken = authenticationToken
-		c.authorization = authorization
+		c.accessToken = accessToken
 	}
 }
 
@@ -81,7 +79,7 @@ func WithHTTPClient(client *http.Client) OptionFunction {
 	}
 }
 
-// WithLogging will write http.Request and http.Response into provided writer
+// WithLogWriter will write http.Request and http.Response into provided writer
 func WithLogWriter(writer io.Writer) OptionFunction {
 	return func(c *Client) {
 		c.logWriter = writer
@@ -97,6 +95,10 @@ func (c *Client) addAuthorization(req *http.Request) {
 		req.Header.Set("Username", c.username)
 		req.Header.Set("Password", c.password)
 	}
+
+	if c.accessToken != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.accessToken))
+	}
 }
 
 func (c *Client) logHTTPRequest(req *http.Request) error {
@@ -110,7 +112,7 @@ func (c *Client) logHTTPRequest(req *http.Request) error {
 	}
 
 	_, err = fmt.Fprint(c.logWriter, string(b))
-	return nil
+	return err
 }
 
 func (c *Client) logHTTPResponse(res *http.Response) error {
@@ -124,5 +126,5 @@ func (c *Client) logHTTPResponse(res *http.Response) error {
 	}
 
 	_, err = fmt.Fprint(c.logWriter, string(b))
-	return nil
+	return err
 }
