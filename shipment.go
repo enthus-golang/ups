@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -17,14 +18,18 @@ func (c *Client) CreateShipment(ctx context.Context, shipmentRequest ShipmentReq
 		return nil, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, string(c.environment), bytes.NewReader(jsonBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", c.environment, shipmentURL), bytes.NewReader(jsonBody))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	c.addAuthorization(req)
+
+	err = c.addAuthorization(ctx, req)
+	if err != nil {
+		return nil, err
+	}
 
 	err = c.logHTTPRequest(req)
 	if err != nil {
@@ -60,14 +65,18 @@ func (c *Client) CreateShipment(ctx context.Context, shipmentRequest ShipmentReq
 }
 
 func (c *Client) VoidShipment(ctx context.Context, shipmentIdentificationNumber string) (*VoidShipmentResponse, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, string(c.environment)+"/cancel/"+shipmentIdentificationNumber, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, fmt.Sprintf("%s%s/cancel/%s", c.environment, shipmentURL, shipmentIdentificationNumber), nil)
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	c.addAuthorization(req)
+
+	err = c.addAuthorization(ctx, req)
+	if err != nil {
+		return nil, err
+	}
 
 	err = c.logHTTPRequest(req)
 	if err != nil {

@@ -1,17 +1,22 @@
 package ups
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httputil"
+	"time"
 )
 
 type Environment string
 
 const (
-	Testing    Environment = "https://wwwcie.ups.com/ship/v2403/shipments"
-	Production Environment = "https://onlinetools.ups.com/ship/v2403/shipments"
+	Testing    Environment = "https://wwwcie.ups.com"
+	Production Environment = "https://onlinetools.ups.com"
+
+	shipmentURL = "/ship/v2403/shipments"
+	oauthURL    = "/security/v1/oauth"
 )
 
 type Client struct {
@@ -22,9 +27,12 @@ type Client struct {
 	accessLicenseNumber string
 
 	// authorization
-	username    string
-	password    string
-	accessToken string
+	username                string
+	password                string
+	clientID                string
+	clientSecret            string
+	accessToken             string
+	accessTokenIsValidUntil time.Time
 
 	logWriter io.Writer
 }
@@ -58,10 +66,11 @@ func WithUsernameAndPassword(username, password string) OptionFunction {
 	}
 }
 
-// WithAccessToken uses an access token for authentication.
-func WithAccessToken(accessToken string) OptionFunction {
+// WithClientIDAndSecret uses an access token for authentication.
+func WithClientIDAndSecret(clientID, clientSecret string) OptionFunction {
 	return func(c *Client) {
-		c.accessToken = accessToken
+		c.clientID = clientID
+		c.clientSecret = clientSecret
 	}
 }
 
@@ -86,9 +95,16 @@ func WithLogWriter(writer io.Writer) OptionFunction {
 	}
 }
 
-func (c *Client) addAuthorization(req *http.Request) {
+func (c *Client) addAuthorization(ctx context.Context, req *http.Request) error {
 	if c.accessLicenseNumber != "" {
 		req.Header.Set("AccessLicenseNumber", c.accessLicenseNumber)
+	}
+
+	if c.clientID != "" && c.clientSecret != "" && c.accessTokenIsValidUntil.Before(time.Now()) {
+		err := c.getOAuthAccessToken(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
 	if c.username != "" && c.password != "" {
@@ -97,8 +113,10 @@ func (c *Client) addAuthorization(req *http.Request) {
 	}
 
 	if c.accessToken != "" {
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.accessToken))
+		req.Header.Set("Authorization", c.accessToken)
 	}
+
+	return nil
 }
 
 func (c *Client) logHTTPRequest(req *http.Request) error {
