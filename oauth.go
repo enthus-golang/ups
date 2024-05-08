@@ -32,7 +32,17 @@ func (c *Client) getOAuthAccessToken(ctx context.Context) error {
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.SetBasicAuth(c.clientID, c.clientSecret)
 
+	err = c.logHTTPRequest(req)
+	if err != nil {
+		return err
+	}
+
 	res, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	err = c.logHTTPResponse(res)
 	if err != nil {
 		return err
 	}
