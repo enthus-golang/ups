@@ -15,7 +15,7 @@ const (
 	Testing    Environment = "https://wwwcie.ups.com"
 	Production Environment = "https://onlinetools.ups.com"
 
-	shipmentURL = "/ship/v2403/shipments"
+	shipmentURL = "/api/shipments/v2403/ship"
 	oauthURL    = "/security/v1/oauth"
 )
 
