@@ -1,3 +1,3 @@
-module gitlab.com/mclgmbh/golang-pkg/ups
+module github.com/enthus-golang/ups
 
-go 1.20
+go 1.22
