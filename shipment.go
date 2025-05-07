@@ -40,7 +40,11 @@ func (c *Client) CreateShipment(ctx context.Context, shipmentRequest ShipmentReq
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func() {
+		if cerr := res.Body.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	err = c.logHTTPResponse(res)
 	if err != nil {
@@ -87,7 +91,11 @@ func (c *Client) VoidShipment(ctx context.Context, shipmentIdentificationNumber 
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func() {
+		if cerr := res.Body.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	err = c.logHTTPResponse(res)
 	if err != nil {
